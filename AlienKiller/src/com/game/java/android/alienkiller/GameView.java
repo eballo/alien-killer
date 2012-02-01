@@ -60,31 +60,12 @@ public class GameView extends View {
 	 */
 	public GameView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-
+		
+		GameManager gameManager = new GameManager();
 		Drawable drawablePlayer, drawableEnemy, drawableWepon;
-		drawableEnemy = context.getResources().getDrawable(R.drawable.monster);
-		drawablePlayer = context.getResources().getDrawable(R.drawable.xwing);
 		
-//		Path pathEnemy = new Path();
-//		pathEnemy.moveTo((float)0.3,(float)0.0);
-//		pathEnemy.moveTo((float)0.6,(float)0.0);
-//		pathEnemy.moveTo((float)0.6,(float)0.3);
-//		pathEnemy.moveTo((float)0.8,(float)0.2);
-//		pathEnemy.moveTo((float)1.0,(float)0.4);
-//		pathEnemy.moveTo((float)0.8,(float)0.6);
-//		pathEnemy.moveTo((float)0.9,(float)0.9);
-//		pathEnemy.moveTo((float)0.8,(float)1.0);
-//		pathEnemy.moveTo((float)0.4,(float)1.0);
-//		pathEnemy.moveTo((float)0.0,(float)0.6);
-//		pathEnemy.moveTo((float)0.0,(float)0.2);
-//		pathEnemy.moveTo((float)0.3,(float)0.0);
-//		ShapeDrawable dShapeDrawableEnemy = new ShapeDrawable(new PathShape(pathEnemy, 1, 1));
-//		dShapeDrawableEnemy.getPaint().setColor(Color.WHITE);
-//		dShapeDrawableEnemy.getPaint().setStyle(Style.STROKE);
-//		dShapeDrawableEnemy.setIntrinsicWidth(300);
-//		dShapeDrawableEnemy.setIntrinsicHeight(300);
-		
-		//drawableEnemy = dShapeDrawableEnemy;
+		drawableEnemy = gameManager.getEnemy(context);
+		drawablePlayer = gameManager.getPlayer(this.getContext());
 		
 		gameObjectsVector = new Vector<GameObjects>();
 		
@@ -102,6 +83,10 @@ public class GameView extends View {
 		player = new Player(this, drawablePlayer);
 		
 		gameObjectsVector.add(player);
+		
+		GameManager gm = new GameManager();
+		
+		System.out.println(gm.getTypeGraphycs(context));
 		
 		thread = new ThreadGame();
 		thread.start();
