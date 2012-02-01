@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Alien Killer</string>
+    <string name="play">Jugar</string>
+    <string name="config">Configuración</string>
+    <string name="about">Acerca de</string>
+    <string name="exit">Salir</string>
+    <string name="title">Allien Killer</string>
+    <string name="aboutText">Mata a todos los aliens que te aparezcan, para poder ganar el juego</string>
+    
+    <string name="titleMusic">Reproducir música</string>
+    <string name="summaryMusic">Se reproduce música de fondo</string>
+    
+    <string name="titleGraphics">Tipo de gráficos</string>
+    <string name="summaryGraphics">elige el tipo de gráficos</string>
+    
+    <string name="titleFragments">Número de fragmentos</string>
+	<string name="summaryFragments">en cuantos trozos se divide un fragmento</string>
+    
+</resources>
