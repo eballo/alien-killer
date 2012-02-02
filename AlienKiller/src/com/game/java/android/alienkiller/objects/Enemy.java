@@ -18,7 +18,11 @@ public class Enemy extends GameObjects {
 	 */
 	public Enemy(View view, Drawable drawable) {
 		super(view, drawable);
-		// TODO Auto-generated constructor stub
+	}
+	
+	public void setRandomVelocity(){
+		this.setvX(Math.random()*40 -20);
+		this.setvY(Math.random()*40 -20);
 	}
 
 }
