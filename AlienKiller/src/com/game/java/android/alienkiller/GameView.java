@@ -7,13 +7,9 @@ import java.util.Vector;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint.Style;
-import android.graphics.Path;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.PathShape;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -24,8 +20,9 @@ import com.game.java.android.alienkiller.objects.Player;
 
 /**
  * 
- * The GameView class has 3 main functions: 
+ * The GameView class that initialize the view of the game
  * 
+ * Create Players and Enemies and begin the logic of the game
  *  
  *  
  * @author nekun
@@ -33,27 +30,35 @@ import com.game.java.android.alienkiller.objects.Player;
  */
 public class GameView extends View {
 	
-	//GameObjects Vector
+	private boolean pause = false;
+	private boolean running = true;
+	
+	private GameManager gameManager = new GameManager();
+	
+	/**
+	 * GameObjects Vector (Player, Enemies, Wepons)
+	 */
 	private Vector<GameObjects> gameObjectsVector;
-	private int numEnemyes = 5;
-	private int numFragments = 3;
+	private int numEnemies = 5;
 	
-	//player
-	private GameObjects player;
-	private int turnPlayer;
-	private float accelerationPlayer;
+	/**
+	 * Player
+	 */
+	private Player player;
 	
-	private static final int CONSTANT_TURN_PLAYER = 5;
-	private static final float CONSTANT_ACCELERATION_PLAYER = 0.5f;
 	
+	/**
+	 *  THREAD 
+	 */
+	// Thread is the responsable of the game process
+	private ThreadGame thread = new ThreadGame();
+	// Period of time of every process (ms)
 	private long lastProcess = 0;
-	private static int TIME_TO_PROCESS = 50;
-	private ThreadGame thread;
+	private static int TIME_TO_PROCESS = 100;
 	
-	private float mX=0, mY=0;
-	private boolean fire = false;
 
 	/**
+	 * GameView
 	 * 
 	 * @param context
 	 * @param attrs
@@ -61,131 +66,160 @@ public class GameView extends View {
 	public GameView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		
-		GameManager gameManager = new GameManager();
-		Drawable drawablePlayer, drawableEnemy, drawableWepon;
+		Drawable drawablePlayer, drawableEnemy; //, drawableWepon;
 		
 		drawableEnemy = gameManager.getEnemy(context);
 		drawablePlayer = gameManager.getPlayer(this.getContext());
 		
+		//Initialize the vector of GameObjects ( Players, Enemys, Wepons )
 		gameObjectsVector = new Vector<GameObjects>();
 		
-		for (int i = 0; i < numEnemyes; i++) {
+		//Create the enemies
+		for (int i = 0; i < numEnemies; i++) {
 			
 			GameObjects enemyObjects = new Monster(this, drawableEnemy);
-			enemyObjects.setIncX(Math.random()*4-2);
-			enemyObjects.setIncY(Math.random()*4-2);
-			enemyObjects.setAngle((int) (Math.random()*360));
-			enemyObjects.setRotation((int)(Math.random()*8-4));
 			gameObjectsVector.add(enemyObjects);
-			
 		}
 		
+		//Create the player
 		player = new Player(this, drawablePlayer);
-		
 		gameObjectsVector.add(player);
-		
-		GameManager gm = new GameManager();
-		
-		System.out.println(gm.getTypeGraphycs(context));
-		
-		thread = new ThreadGame();
-		thread.start();
 		
 	}
 	
-	protected void refreshFisic(){
+	protected synchronized void updateFisic(){
 		long now = System.currentTimeMillis();
 		
-		if(lastProcess + this.TIME_TO_PROCESS > now ){
+		if(lastProcess + GameView.TIME_TO_PROCESS > now ){
 			return;
 		}
 		
-		double retard = (now - lastProcess) / TIME_TO_PROCESS;
+//		double retard = (now - lastProcess) / TIME_TO_PROCESS;
+//		
+//		double pIncX = player.getvX() + accelerationPlayer * Math.cos(Math.toRadians(player.getAngle())*retard);
+//		double pIncY = player.getvY() + accelerationPlayer * Math.sin(Math.toRadians(player.getAngle())*retard);
+//		
+//		if(GameObjects.distanceE(0, 0, pIncX, pIncY)<= GameObjects.getMaxVelocity()){
+//			player.setvX(pIncX);
+//			player.setvY(pIncY);
+//		}
+//		player.incrementPosition();
 		
-		player.setAngle((int) (player.getAngle()+turnPlayer*retard));
-		
-		double pIncX = player.getIncX() + accelerationPlayer * Math.cos(Math.toRadians(player.getAngle())*retard);
-		double pIncY = player.getIncY() + accelerationPlayer * Math.sin(Math.toRadians(player.getAngle())*retard);
-		
-		if(GameObjects.distanceE(0, 0, pIncX, pIncY)<= GameObjects.getMaxVelocity()){
-			player.setIncX(pIncX);
-			player.setIncY(pIncY);
+		for(GameObjects enemy : gameObjectsVector){
+			if(enemy instanceof Enemy){
+				((Enemy) enemy).setRandomVelocity();
+				((Monster) enemy).incrementPosition();
+			}
 		}
-		player.incrementPos();
 		
-		for(int i=0; i< gameObjectsVector.size(); i++){
-			GameObjects enemy = (GameObjects) gameObjectsVector.get(i);
-			enemy.setIncX((double)Math.random()*4-2);
-			enemy.setIncY((double)Math.random()*4-2);
-			enemy.setAngle((int) (Math.random()*360));
-			enemy.setRotation((int)(Math.random()*8-4));
-			enemy.incrementPos();
-		}
 		lastProcess = now;
 
 	}
+
+	/* (non-Javadoc)
+	 * @see android.view.View#onSizeChanged(int, int, int, int)
+	 * width : real with of the screen
+	 * height : real heigh of the screen
+	 * 
+	 */
+	@Override
+	protected void onSizeChanged(int width, int height, int old_width, int old_height) {
+		super.onSizeChanged(width, height, old_width, old_height);
+		
+		Log.d("DimensionScreen", "width:"+width);
+		Log.d("DimensionScreen", "height:"+height);
+		
+		player.setInitialize(width,height);
+		
+		//Initialize enemy Objects
+		//Check distance between player and enemy. 
+		//we don't want to begin the game and die
+		for (GameObjects enemy: gameObjectsVector) {
+			if( enemy instanceof Enemy){
+				do{
+					Log.d("GameView", "is a Instance of Enemy");
+					//set a random position to the enemies
+					enemy.setX(Math.random()*(width - enemy.getWidth()));
+					enemy.setY(Math.random()*(height - enemy.getHeight()));
+				} while (enemy.distance(player) < (width + height) / 5);
+			}
+		}
+		
+		thread.start();
+	}
+
+	/* (non-Javadoc)
+	 * @see android.view.View#onDraw(android.graphics.Canvas)
+	 */
+	@Override
+	protected synchronized void onDraw(Canvas canvas) {
+
+		super.onDraw(canvas);
+		
+		player.paintGameObject(canvas);
+		
+		for(GameObjects enemy: gameObjectsVector){
+			if(enemy instanceof Enemy){
+				enemy.paintGameObject(canvas);
+			}
+		}
+	}
 	
+	/* (non-Javadoc)
+	 * @see android.view.View#onTouchEvent(android.view.MotionEvent)
+	 */
 	public boolean onTouchEvent (MotionEvent event){
 		super.onTouchEvent(event);
-		float x = event.getX();
-		float y = event.getY();
+		//float x = event.getX();
+		//float y = event.getY();
 		
 		switch (event.getAction()){
 		case MotionEvent.ACTION_DOWN:
-			fire = true;
+			//TODO action_down
 			break;
 		case MotionEvent.ACTION_MOVE:
-			float dx = Math.abs(x - mX);
-			float dy = Math.abs(y - mY);
-			if(dy<6 && dx>6){
-				turnPlayer = Math.round((x - mX)/2);
-				fire = false;
-			}else if(dx<6 && dy>6){
-				accelerationPlayer = Math.round((mY - y) /25);
-				fire = false;
-			}
+			//TODO action_move
 			break;
 		case MotionEvent.ACTION_UP:
-			turnPlayer = 0;
-			accelerationPlayer = 0;
-			if (fire){
-			}
+			//TODO action_up
 			break;
 		}
-		mX = x; 
-		mY = y;
 		return true;
 	}
-
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		super.onSizeChanged(w, h, oldw, oldh);
-		for (GameObjects gameObjects: gameObjectsVector) {
-			gameObjects.setPosX(Math.random()*(w - gameObjects.getWidth()));
-			gameObjects.setPosY(Math.random()*(h - gameObjects.getHeight()));
-			
-		}
-	}
-
-	@Override
-	protected void onDraw(Canvas canvas) {
-		// TODO Auto-generated method stub
-		super.onDraw(canvas);
-		for(GameObjects gameObjects: gameObjectsVector){
-			gameObjects.paintGameObject(canvas);
-		}
-	}
 	
+	/**
+	 * 
+	 * Therad Class for the ThreadGame
+	 * 
+	 * Will refresh the fisics of the game every time.
+	 * 
+	 * @author nekun
+	 *
+	 */
 	class ThreadGame extends Thread {
 
 		@Override
 		public void run() {
-			while(true){
-				refreshFisic();
+			while(running){
+				updateFisic();
+				while(pause){
+					try{
+						wait();
+					}catch (Exception e) {
+						// TODO: handle exception
+					}
+				}
 			}
 		}
 		
 	}
 	
+	public void setPause(boolean pause){
+		this.pause = pause;
+	}
+	
+	public void onResume(boolean pause){
+		this.pause= pause;
+	}
+	
 }
-
