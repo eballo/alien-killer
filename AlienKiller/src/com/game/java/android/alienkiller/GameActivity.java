@@ -11,12 +11,26 @@ import android.os.Bundle;
  *
  */
 public class GameActivity extends Activity {
+	private GameView gameView;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.game);
+		gameView = (GameView)findViewById(R.id.GameView);
+	}
+	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onPause()
+	 */
+	protected void onPause(){
+		super.onPause();
+		gameView.setPause(true);
+	}
+	
+	protected void onResume(){
+		super.onResume();
+		gameView.setPause(false);
 	}
 
 }
